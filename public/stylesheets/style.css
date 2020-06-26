@@ -1,0 +1,19 @@
+body {
+  padding: 50px;
+  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+  justify-content: center;
+  align-items: center;
+}
+h1 {
+  color: #00B7FF;
+  font-weight: bold;
+  font: 44px "Lucida Grande", Helvetica, Arial, sans-serif;
+  padding-left: 40%;
+  padding-top: 15%;
+}
+p {
+  color: "black";
+  font-weight: bold;
+  font: 24px "Lucida Grande", Helvetica, Arial, sans-serif;
+  padding-left: 39%;
+}
