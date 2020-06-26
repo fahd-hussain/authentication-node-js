@@ -1,7 +1,7 @@
 var express = require("express");
 var router = express.Router();
-// var multer = require("multer");
-// var upload = multer({ dest: "uploads/" });
+var multer = require("multer");
+var upload = multer({ dest: "uploads/" });
 // var fs = require('fs');
 
 const bodyParser = require("body-parser");
@@ -128,4 +128,9 @@ router.get("/profile", (req, res) => {
         }
     })(req, res);
 });
+
+router.post("/profilePicture", upload.single("profilePicture"), (req, res)=> {
+    console.log(req.file)
+})
+
 module.exports = router;
