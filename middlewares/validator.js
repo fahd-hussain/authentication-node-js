@@ -1,4 +1,4 @@
-const User = require("../models/User");
+var User = require("../models/user");
 
 class validator {
   /**
@@ -19,7 +19,7 @@ class validator {
         // req.body[firstname]
         // e.g Error 'first name is required'
         const temp = p.replace(' ', '');
-
+        console.log(req.body[temp])
         if (req.body[temp] === undefined) {
           const err = new Error();
           err.message = `${p} is required`;
@@ -83,7 +83,7 @@ class validator {
         const regex = /\d/;
         if (regex.test(req.body[temp]) === true) {
           const err = new Error();
-          err.message = `${p} is not a vaild string`;
+          err.message = `${p} is not a valid string`;
           err.statusCode = 400;
           return next(err);
         }
@@ -113,7 +113,7 @@ class validator {
         const regex = /\D/;
         if (regex.test(req.body[temp]) === true) {
           const err = new Error();
-          err.message = `${p} is not a vaild integer`;
+          err.message = `${p} is not a valid integer`;
           err.statusCode = 400;
           return next(err);
         }
@@ -231,10 +231,10 @@ class validator {
    * @returns {json}
    */
   static checkEmailValid(req, res, next) {
-    const { email } = req.body;
+    const { username } = req.body;
     const regex = /\w+@\w+\.\w{3}/;
 
-    if (regex.test(email) !== true) {
+    if (regex.test(username) !== true) {
       const err = new Error();
       err.statusCode = 400;
       err.message = 'invalid email address';

@@ -31,73 +31,80 @@ router.get("/", authenticate.verifyUser, authenticate.verifyAdmin, (req, res, ne
 /* User panel */
 router.post(
     "/signup",
-    validator.checkBodyContains("first name", "last name", "username", "gender", "password", "password2"),
-    validator.checkBodyNotEmpty("first name", "last name", "username", "gender", "password"),
-    validator.checkBodyValidString("first name", "last name", "gender"),
-    validator.checkBodyMinValue(3, "first name", "last name", "username"),
+    validator.checkBodyContains("firstname", "lastname", "username", "gender", "password", "password2"),
+    validator.checkBodyNotEmpty("firstname", "lastname", "username", "gender", "password"),
+    validator.checkBodyValidString("firstname", "lastname", "gender"),
+    validator.checkBodyMinValue(3, "firstname", "lastname", "username"),
     validator.checkBodyMinValue(4, "gender"),
     validator.checkBodyMinValue(6, "password"),
-    validator.checkBodyMaxValue(30, "first name", "last name", "username", "password"),
+    validator.checkBodyMaxValue(30, "firstname", "lastname", "username", "password"),
     validator.checkBodyMaxValue(6, "gender"),
+    validator.checkEmailValid,
     validator.checkGenderValid,
     validator.checkPasswordsMatch,
     (req, res, next) => {
-        console.log(req.body);
-        // User.register(new User({ username: req.body.username }), req.body.password, (err, user) => {
-        //     if (err) {
-        //         res.statusCode = 500;
-        //         res.setHeader("Content-Type", "application/json");
-        //         res.json({ err: err });
-        //     } else {
-        //         if (req.body.firstname) user.firstname = req.body.firstname;
-        //         if (req.body.lastname) user.lastname = req.body.lastname;
-        //         if (req.body.gender) user.gender = req.body.gender;
-        //         user.save((err, user) => {
-        //             if (err) {
-        //                 res.statusCode = 500;
-        //                 res.setHeader("Content-Type", "application/json");
-        //                 res.json({ err: err });
-        //                 return;
-        //             }
-        //             passport.authenticate("local")(req, res, () => {
-        //                 const token = authenticate.getToken({ _id: req.user._id });
-        //                 res.statusCode = 200;
-        //                 res.setHeader("Content-Type", "application/json");
-        //                 res.json({ success: true, status: "Registration Successful!", token });
-        //             });
-        //         });
-        //     }
-        // });
+        User.register(new User({ username: req.body.username }), req.body.password, (err, user) => {
+            if (err) {
+                res.statusCode = 500;
+                res.setHeader("Content-Type", "application/json");
+                res.json({ err: err });
+            } else {
+                if (req.body.firstname) user.firstname = req.body.firstname;
+                if (req.body.lastname) user.lastname = req.body.lastname;
+                if (req.body.gender) user.gender = req.body.gender;
+                console.log(user);
+                user.save((err, user) => {
+                    if (err) {
+                        res.statusCode = 500;
+                        res.setHeader("Content-Type", "application/json");
+                        res.json({ err: err });
+                        return;
+                    }
+                    passport.authenticate("local")(req, res, () => {
+                        const token = authenticate.getToken({ _id: req.user._id });
+                        res.statusCode = 200;
+                        res.setHeader("Content-Type", "application/json");
+                        res.json({ success: true, status: "Registration Successful!", token });
+                    });
+                });
+            }
+        });
     },
 );
 
-router.post("/login", (req, res, next) => {
-    passport.authenticate("local", (err, user, info) => {
-        if (err) return next(err);
+router.post(
+    "/login",
+    validator.checkBodyContains("username", "password"),
+    validator.checkBodyNotEmpty("username", "password"),
+    validator.checkEmailValid,
+    (req, res, next) => {
+        passport.authenticate("local", (err, user, info) => {
+            if (err) return next(err);
 
-        if (!user) {
-            res.statusCode = 401;
-            res.setHeader("Content-Type", "application/json");
-            res.json({ success: false, status: "Login Unsuccessful!", err: info });
-        }
-        req.logIn(user, (err) => {
-            if (err) {
+            if (!user) {
                 res.statusCode = 401;
                 res.setHeader("Content-Type", "application/json");
-                res.json({
-                    success: false,
-                    status: "Login Unsuccessful!",
-                    err: "Could not log in user!",
-                });
+                res.json({ success: false, status: "Login Unsuccessful!", err: info });
             }
+            req.logIn(user, (err) => {
+                if (err) {
+                    res.statusCode = 401;
+                    res.setHeader("Content-Type", "application/json");
+                    res.json({
+                        success: false,
+                        status: "Login Unsuccessful!",
+                        err: "Could not log in user!",
+                    });
+                }
 
-            const token = authenticate.getToken({ _id: req.user._id });
-            res.statusCode = 200;
-            res.setHeader("Content-Type", "application/json");
-            res.json({ success: true, status: "Login Successful!", token: token });
-        });
-    })(req, res, next);
-});
+                const token = authenticate.getToken({ _id: req.user._id });
+                res.statusCode = 200;
+                res.setHeader("Content-Type", "application/json");
+                res.json({ success: true, status: "Login Successful!", token: token });
+            });
+        })(req, res, next);
+    },
+);
 
 router.get("/logout", (req, res) => {
     req.logout();
@@ -121,53 +128,4 @@ router.get("/profile", (req, res) => {
         }
     })(req, res);
 });
-
-router
-    .route("/:uid")
-    .get(authenticate.verifyUser, (req, res, next) => {
-        User.findById(req.params.uid)
-            .then(
-                (user) => {
-                    res.statusCode = 200;
-                    res.setHeader("Content-Type", "application/json");
-                    res.json(user);
-                },
-                (err) => next(err),
-            )
-            .catch((err) => next(err));
-    })
-    // .post(authenticate.verifyUser, upload.single("photo"), (req, res, next) => {
-    //     console.log(req.file);
-    //     //below code will read the data from the upload folder. Multer     will automatically upload the file in that folder with an  autogenerated name
-    //     // fs.readFile(req.file.path, (err, contents) => {
-    //     //     if (err) {
-    //     //         console.log("Error: ", err);
-    //     //     } else {
-    //     //         console.log("File contents ", contents);
-    //     //     }
-    //     // });
-    // })
-    .put(authenticate.verifyUser, (req, res, next) => {
-        User.findByIdAndUpdate(
-            req.params.uid,
-            {
-                $set: req.body,
-            },
-            { new: true },
-        )
-            .then(
-                (user) => {
-                    res.statusCode = 200;
-                    res.setHeader("Content-Type", "application/json");
-                    res.json(user);
-                },
-                (err) => next(err),
-            )
-            .catch((err) => next(err));
-    })
-    .delete(authenticate.verifyUser, (req, res, next) => {
-        res.statusCode = 403;
-        res.end("DELETE operation not supported on /User/" + req.params.uid);
-    });
-
 module.exports = router;

@@ -6,19 +6,19 @@ var User = new Schema(
     {
         firstname: {
             type: String,
-            required: true,
+            // required: true,
             unique: false,
             maxlength: 30,
         },
         lastname: {
             type: String,
-            required: true,
+            // required: true,
             unique: false,
             maxlength: 30,
         },
         gender: {
             type: String,
-            required: true,
+            // required: true,
             unique: false,
             maxlength: 6,
         },
