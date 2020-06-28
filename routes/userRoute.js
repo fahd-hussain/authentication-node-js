@@ -1,14 +1,34 @@
-var express = require("express");
-var router = express.Router();
-var multer = require("multer");
-var upload = multer({ dest: "uploads/" });
-// var fs = require('fs');
+const express = require("express");
+const router = express.Router();
+const multer = require("multer");
+
+const storage = multer.diskStorage({
+    destination: (req, file, callback) => {
+        callback(null, "./public/images/")
+    },
+    filename: (req, file, callback) => {
+        callback(null, file.originalname)
+        // new Date().toISOString() +
+    }
+})
+
+const fileFilter = (req, file, callback) => {
+    if (file.mimetype === "image/png") callback(null, true)
+    else callback("File extension does not match", false)
+}
+const upload = multer({ 
+    storage: storage, 
+    limits: {
+    fileSize: 1024 * 1024 * 5
+    },
+    fileFilter: fileFilter
+});
 
 const bodyParser = require("body-parser");
-var User = require("../models/user");
+const User = require("../models/user");
 
-var passport = require("passport");
-var authenticate = require("../middlewares/authenticate");
+const passport = require("passport");
+const authenticate = require("../middlewares/authenticate");
 const validator = require("../middlewares/validator");
 
 router.use(bodyParser.json());
@@ -129,8 +149,27 @@ router.get("/profile", (req, res) => {
     })(req, res);
 });
 
-router.post("/profilePicture", upload.single("profilePicture"), (req, res)=> {
-    console.log(req.file)
-})
+router.post("/profilePicture", authenticate.verifyUser, upload.single("profilePicture"), (req, res, next) => {
+    console.log(req);
+
+    const picturePath = req.file.path;
+
+    User.findByIdAndUpdate(
+        req.user._id,
+        {
+            "profilePicture": picturePath,
+        },
+        { new: true },
+    )
+        .then(
+            (User) => {
+                res.statusCode = 200;
+                res.setHeader("Content-Type", "application/json");
+                res.json(User);
+            },
+            (err) => next(err),
+        )
+        .catch((err) => next(err));
+});
 
 module.exports = router;
